@@ -7,6 +7,7 @@ import threading
 import urllib.request
 import customtkinter as ctk
 from tkinter import filedialog
+import shutil
 
 # --- WOW FACTOR: Modern Theme ---
 ctk.set_appearance_mode("Dark")  
@@ -16,12 +17,12 @@ class MindSQLInstaller(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("MindSQL Setup Engine")
-        self.geometry("600.450")
+        self.geometry("600x450") # Fixed geometry string
         self.resizable(False, False)
         
         self.os_type = platform.system()
         self.model_path = None
-        # YOUR GITHUB REPO
+        # YOUR UPDATED GITHUB REPO
         self.repo_url = "https://github.com/AkhildevCV/mindsql_package.git"
 
         # --- Main Container ---
@@ -53,17 +54,14 @@ class MindSQLInstaller(ctk.CTk):
         self.action_btn.pack(pady=20)
 
     def check_requirements(self):
-        """Checks for both Ollama and Git."""
         ollama_installed = False
         git_installed = False
 
-        # Check Ollama
         try:
             subprocess.run(["ollama", "--version"], capture_output=True, check=True)
             ollama_installed = True
         except: pass
 
-        # Check Git
         try:
             subprocess.run(["git", "--version"], capture_output=True, check=True)
             git_installed = True
@@ -126,16 +124,26 @@ class MindSQLInstaller(ctk.CTk):
             self.finish_installation()
 
     def download_hf_model(self):
-        self.path_label.configure(text="Downloading model... please wait.", text_color="yellow")
+        # DIRECT DOWNLOAD URL FROM YOUR HUGGING FACE
+        hf_url = "https://huggingface.co/AKHILDEVCV/MindSQL-Model-GGUF/resolve/main/qwen2.5-coder-3b-instruct.Q4_K_M.gguf"
+        filename = "qwen2.5-coder-3b-instruct.Q4_K_M.gguf"
+        
+        self.path_label.configure(text="Downloading AI Model... (approx 2GB)", text_color="yellow")
+        self.update()
+
         def run_download():
-            # Placeholder for actual URL
-            self.model_path = os.path.join(os.getcwd(), "mindsql-v2.gguf")
-            # urllib.request.urlretrieve("YOUR_HF_URL", self.model_path)
-            self.finish_installation()
+            try:
+                self.model_path = os.path.join(os.getcwd(), filename)
+                urllib.request.urlretrieve(hf_url, self.model_path)
+                self.path_label.configure(text="✅ Download Complete!", text_color="springgreen")
+                self.finish_installation()
+            except Exception as e:
+                self.path_label.configure(text=f"❌ Download Failed: {e}", text_color="red")
+
         threading.Thread(target=run_download, daemon=True).start()
 
     # ==========================================
-    # SCREEN 3: Final Setup (Code Clone + Model Build)
+    # SCREEN 3: Final Setup
     # ==========================================
     def finish_installation(self):
         self.clear_container()
@@ -155,11 +163,10 @@ class MindSQLInstaller(ctk.CTk):
             try:
                 # 1. CLONE THE REPOSITORY
                 self.status_final.configure(text="📥 Cloning MindSQL repository...", text_color="cyan")
-                if not os.path.exists(".git"): # Avoid error if already cloned
+                if not os.path.exists(".git"):
                     subprocess.run(["git", "clone", self.repo_url, "temp_repo"], check=True)
-                    # Move files from temp_repo to current dir
-                    import shutil
                     for item in os.listdir("temp_repo"):
+                        if item == ".git": continue # Don't overwrite local git if testing
                         s = os.path.join("temp_repo", item)
                         d = os.path.join(os.getcwd(), item)
                         if os.path.isdir(s):
@@ -177,8 +184,8 @@ class MindSQLInstaller(ctk.CTk):
                 subprocess.run(["ollama", "create", "mindsql", "-f", "Modelfile"], check=True)
                 if os.path.exists("Modelfile"): os.remove("Modelfile")
 
-                self.status_final.configure(text="✅ All Done! Run 'python main.py' to start.", text_color="springgreen")
-                ctk.CTkButton(self.container, text="Close", command=self.destroy).pack(pady=10)
+                self.status_final.configure(text="✅ Setup Complete!", text_color="springgreen")
+                ctk.CTkButton(self.container, text="Close & Launch", command=self.destroy).pack(pady=10)
             except Exception as e:
                 self.status_final.configure(text=f"❌ Error: {e}", text_color="red")
                 self.final_btn.configure(state="normal")
