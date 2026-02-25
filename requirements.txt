@@ -1,0 +1,9 @@
+typer
+ollama
+sqlglot
+rich
+SQLAlchemy
+prompt_toolkit
+sql-metadata
+customtkinter
+pymysql
