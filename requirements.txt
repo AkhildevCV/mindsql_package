@@ -1,0 +1,13 @@
+# requirements.txt – MindSQL runtime dependencies
+ollama
+sqlalchemy>=2.0
+pymysql
+psycopg2-binary
+rich
+prompt_toolkit
+typer
+sqlglot
+sql-metadata
+customtkinter
+pywin32; sys_platform == "win32"
+pyinstaller
